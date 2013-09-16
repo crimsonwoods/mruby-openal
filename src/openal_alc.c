@@ -21,6 +21,9 @@ typedef struct mrb_alc_device_data_t {
 
 typedef struct mrb_alc_capturedevice_data_t {
   ALCdevice *device;
+  ALint      frequency;
+  ALenum     format;
+  ALsizei    samples;
 } mrb_alc_capturedevice_data_t;
 
 static mrb_value specifier_to_array(mrb_state *mrb, ALchar const * const specifier);
@@ -396,6 +399,9 @@ mrb_alc_capturedevice_open(mrb_state *mrb, mrb_value self)
     mrb_raisef(mrb, class_ALCError, "cannot open capture device (%S).", name);
   }
   data->device = device;
+  data->frequency = freq;
+  data->format = format;
+  data->samples = size;
   return self;
 }
 
@@ -458,15 +464,37 @@ mrb_alc_capturedevice_samples(mrb_state *mrb, mrb_value self)
   int const argc = mrb_get_args(mrb, "o|i", &buf, &sample);
   mrb_al_sample_buffer_data_t *buf_data =
     (mrb_al_sample_buffer_data_t*)mrb_data_get_ptr(mrb, buf, &mrb_al_sample_buffer_data_type);
-  if (1 == argc) {
-    alcCaptureSamples(data->device, buf_data->buffer, buf_data->capacity);
-  } else {
-    alcCaptureSamples(data->device, buf_data->buffer, sample);
+  ALsizei coef = 1;
+  switch (data->format) {
+  case AL_FORMAT_MONO8:
+    coef = 1;
+    break;
+  case AL_FORMAT_MONO16:
+    coef = 2;
+    break;
+  case AL_FORMAT_STEREO8:
+    coef = 2;
+    break;
+  case AL_FORMAT_STEREO16:
+    coef = 4;
+    break;
+  default:
+    mrb_raise(mrb, class_ALCError, "capture device is opened as unsupported format.");
+    break;
   }
+  ALsizei sample_count = buf_data->capacity / coef;
+  if (1 < argc) {
+    if (sample_count > (ALsizei)sample) {
+      mrb_raise(mrb, E_ARGUMENT_ERROR, "too many sampling count is supplied.");
+    }
+    sample_count = (ALsizei)sample;
+  }
+  alcCaptureSamples(data->device, buf_data->buffer, sample_count);
   ALCenum const e = alcGetError(data->device);
   if (ALC_NO_ERROR != e) {
     mrb_raise(mrb, class_ALCError, alcGetString(data->device, e));
   }
+  buf_data->size = sample_count * coef;
   return self;
 }
 

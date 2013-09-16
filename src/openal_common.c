@@ -40,6 +40,11 @@ mrb_al_samplebuffer_initialize(mrb_state *mrb, mrb_value self)
       mrb_raise(mrb, E_RUNTIME_ERROR, "insufficient memory.");
     }
     data->buffer = buffer;
+  } else {
+    data->buffer = mrb_malloc(mrb, capacity);
+    if (NULL == data->buffer) {
+      mrb_raise(mrb, E_RUNTIME_ERROR, "insufficient memory.");
+    }
   }
 
   data->capacity = capacity;

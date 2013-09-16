@@ -393,7 +393,11 @@ mrb_al_buffer_create_waveform(mrb_state *mrb, mrb_value self)
   mrb_get_args(mrb, "ifff", &shape, &freq, &phase, &duration);
   ALuint name = alutCreateBufferWaveform((ALenum)shape, (ALfloat)freq, (ALfloat)phase, (ALfloat)duration);
   if (0 == name) {
-    return mrb_nil_value();
+    ALenum const e = alutGetError();
+    if (e == AL_NO_ERROR) {
+      return mrb_nil_value();
+    }
+    mrb_raise(mrb, class_ALError, alutGetErrorString(e));
   }
   mrb_al_buffer_data_t *buf = (mrb_al_buffer_data_t*)mrb_malloc(mrb, sizeof(mrb_al_buffer_data_t));
   if (NULL == buf) {

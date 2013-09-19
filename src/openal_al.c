@@ -3,6 +3,7 @@
 #include "mruby/class.h"
 #include "mruby/array.h"
 #include "mruby/string.h"
+#include "mruby/variable.h"
 #include <AL/al.h>
 #include <AL/alut.h>
 #include <stdbool.h>
@@ -675,17 +676,7 @@ mrb_al_source_set_looping(mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_al_source_get_buffer(mrb_state *mrb, mrb_value self)
 {
-  mrb_al_source_data_t *data =
-    (mrb_al_source_data_t*)mrb_data_get_ptr(mrb, self, &mrb_al_source_data_type);
-  ALuint value;
-  alGetSourcei(data->source, AL_BUFFER, (ALint*)&value);
-  mrb_al_buffer_data_t *buf = mrb_malloc(mrb, sizeof(mrb_al_buffer_data_t));
-  if (NULL == buf) {
-    mrb_raise(mrb, E_RUNTIME_ERROR, "insufficient memory.");
-  }
-  buf->do_delete_on_free = false;
-  buf->buffer = value;
-  return mrb_obj_value(Data_Wrap_Struct(mrb, class_Buffer, &mrb_al_buffer_data_type, buf));
+  return mrb_iv_get(mrb, self, mrb_intern2(mrb, "@buffer", 7));
 }
 
 static mrb_value
@@ -695,9 +686,18 @@ mrb_al_source_set_buffer(mrb_state *mrb, mrb_value self)
     (mrb_al_source_data_t*)mrb_data_get_ptr(mrb, self, &mrb_al_source_data_type);
   mrb_value buffer;
   mrb_get_args(mrb, "o", &buffer);
-  mrb_al_buffer_data_t *buf_data =
-    (mrb_al_buffer_data_t*)mrb_data_get_ptr(mrb, buffer, &mrb_al_buffer_data_type);
-  alSourcei(data->source, AL_BUFFER, buf_data->buffer);
+  mrb_iv_set(mrb, self, mrb_intern2(mrb, "@buffer", 7), buffer);
+  if (mrb_nil_p(buffer)) {
+    alSourcei(data->source, AL_BUFFER, AL_NONE);
+  } else {
+    mrb_al_buffer_data_t *buf_data =
+      (mrb_al_buffer_data_t*)mrb_data_get_ptr(mrb, buffer, &mrb_al_buffer_data_type);
+    alSourcei(data->source, AL_BUFFER, buf_data->buffer);
+  }
+  ALenum const e = alGetError();
+  if (AL_NO_ERROR != e) {
+    mrb_raise(mrb, class_ALError, alGetString(e));
+  }
   return buffer;
 }
 

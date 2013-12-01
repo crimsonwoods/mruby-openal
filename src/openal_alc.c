@@ -83,7 +83,7 @@ mrb_alc_context_initialize(mrb_state *mrb, mrb_value self)
   ALCint attrs[argc + 1];
   for (i = 0; i < argc; ++i) {
     if (!mrb_fixnum_p(argv[i])) {
-      if (mrb_respond_to(mrb, argv[i], mrb_intern2(mrb, "to_i", 4))) {
+      if (mrb_respond_to(mrb, argv[i], mrb_intern(mrb, "to_i", 4))) {
         argv[i] = mrb_funcall(mrb, argv[i], "to_i", 0);
       } else {
         mrb_raise(mrb, E_TYPE_ERROR, "attributes must be integer type.");
@@ -204,7 +204,7 @@ mrb_alc_device_initialize(mrb_state *mrb, mrb_value self)
       device = alcOpenDevice(NULL);
     } else if (mrb_string_p(name)) {
       device = alcOpenDevice(RSTRING_PTR(name));
-    } else if (mrb_respond_to(mrb, name, mrb_intern2(mrb, "to_s", 4))) {
+    } else if (mrb_respond_to(mrb, name, mrb_intern(mrb, "to_s", 4))) {
       name = mrb_funcall(mrb, name, "to_s", 0);
       device = alcOpenDevice(RSTRING_PTR(name));
     } else {
@@ -269,7 +269,7 @@ mrb_alc_device_open(mrb_state *mrb, mrb_value self)
       device = alcOpenDevice(NULL);
     } else if (mrb_string_p(name)) {
       device = alcOpenDevice(RSTRING_PTR(name));
-    } else if (mrb_respond_to(mrb, name, mrb_intern2(mrb, "to_s", 4))) {
+    } else if (mrb_respond_to(mrb, name, mrb_intern(mrb, "to_s", 4))) {
       name = mrb_funcall(mrb, name, "to_s", 0);
       device = alcOpenDevice(RSTRING_PTR(name));
     } else {

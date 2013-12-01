@@ -676,7 +676,7 @@ mrb_al_source_set_looping(mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_al_source_get_buffer(mrb_state *mrb, mrb_value self)
 {
-  return mrb_iv_get(mrb, self, mrb_intern2(mrb, "@buffer", 7));
+  return mrb_iv_get(mrb, self, mrb_intern(mrb, "@buffer", 7));
 }
 
 static mrb_value
@@ -686,7 +686,7 @@ mrb_al_source_set_buffer(mrb_state *mrb, mrb_value self)
     (mrb_al_source_data_t*)mrb_data_get_ptr(mrb, self, &mrb_al_source_data_type);
   mrb_value buffer;
   mrb_get_args(mrb, "o", &buffer);
-  mrb_iv_set(mrb, self, mrb_intern2(mrb, "@buffer", 7), buffer);
+  mrb_iv_set(mrb, self, mrb_intern(mrb, "@buffer", 7), buffer);
   if (mrb_nil_p(buffer)) {
     alSourcei(data->source, AL_BUFFER, AL_NONE);
   } else {
